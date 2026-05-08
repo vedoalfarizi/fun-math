@@ -93,39 +93,39 @@ Implement the full monorepo stack — FastAPI backend with three LangGraph agent
   - Ask the user if questions arise.
   - _Requirements: 2.4, 1.4_
 
-- [ ] 10. Frontend foundation
-  - [ ] 10.1 Scaffold the React + Vite + TypeScript project under `frontend/` — create `package.json` with dependencies (`react`, `react-dom`, `typescript`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `postcss`, `autoprefixer`), `vite.config.ts`, `tailwind.config.js`, `index.html`, and `src/main.tsx`
+- [x] 10. Frontend foundation
+  - [x] 10.1 Scaffold the React + Vite + TypeScript project under `frontend/` — create `package.json` with dependencies (`react`, `react-dom`, `typescript`, `vite`, `@vitejs/plugin-react`, `tailwindcss`, `postcss`, `autoprefixer`), `vite.config.ts`, `tailwind.config.js`, `index.html`, and `src/main.tsx`
     - _Requirements: 11.1_
-  - [ ] 10.2 Write `frontend/Dockerfile` — Node 20-alpine base, copy `package.json`, run `npm install`, copy source, expose port 3000, set `CMD ["npm", "run", "dev", "--", "--host"]`
+  - [x] 10.2 Write `frontend/Dockerfile` — Node 20-alpine base, copy `package.json`, run `npm install`, copy source, expose port 3000, set `CMD ["npm", "run", "dev", "--", "--host"]`
     - _Requirements: 2.1_
-  - [ ] 10.3 Write `frontend/src/api/client.ts` — implement `apiFetch<T>()` base helper reading `VITE_API_URL` from env (defaulting to `http://localhost:8080`); implement typed wrappers `tutorChat`, `practiceStart`, `practiceAnswer`, `uploadDoc`, `getDocConcepts` matching the Pydantic model shapes exactly
+  - [x] 10.3 Write `frontend/src/api/client.ts` — implement `apiFetch<T>()` base helper reading `VITE_API_URL` from env (defaulting to `http://localhost:8080`); implement typed wrappers `tutorChat`, `practiceStart`, `practiceAnswer`, `uploadDoc`, `getDocConcepts` matching the Pydantic model shapes exactly
     - _Requirements: 11.4, 11.5, 12.1_
-  - [ ] 10.4 Write `frontend/src/components/LoadingSpinner.tsx` — Tailwind `animate-spin` spinner shown via an `isLoading` prop
+  - [x] 10.4 Write `frontend/src/components/LoadingSpinner.tsx` — Tailwind `animate-spin` spinner shown via an `isLoading` prop
     - _Requirements: 11.4_
-  - [ ] 10.5 Write `frontend/src/components/ErrorBanner.tsx` — red-background banner with dismissible × button; accepts an `error` string prop; renders nothing when `error` is null
+  - [x] 10.5 Write `frontend/src/components/ErrorBanner.tsx` — red-background banner with dismissible × button; accepts an `error` string prop; renders nothing when `error` is null
     - _Requirements: 11.5_
-  - [ ] 10.6 Write `frontend/src/components/TabNav.tsx` — three-tab navigation bar with labels "Adaptive Tutor", "Practice Agent", "Doc-to-Concept"; highlights the active tab; calls an `onSelect` callback with the tab index
+  - [x] 10.6 Write `frontend/src/components/TabNav.tsx` — three-tab navigation bar with labels "Adaptive Tutor", "Practice Agent", "Doc-to-Concept"; highlights the active tab; calls an `onSelect` callback with the tab index
     - _Requirements: 11.1_
-  - [ ] 10.7 Write `frontend/src/App.tsx` — renders `TabNav` and conditionally renders the active page component (`AdaptiveTutor`, `PracticeAgent`, or `DocToConcept`) based on selected tab
+  - [x] 10.7 Write `frontend/src/App.tsx` — renders `TabNav` and conditionally renders the active page component (`AdaptiveTutor`, `PracticeAgent`, or `DocToConcept`) based on selected tab
     - _Requirements: 11.1_
 
-- [ ] 11. Frontend Path A — Adaptive Tutor page
+- [x] 11. Frontend Path A — Adaptive Tutor page
   - Write `frontend/src/pages/AdaptiveTutor.tsx` — implement the chat interface with scrollable chat history, topic filter input, question input, and Send button; call `tutorChat` on submit; render each tutor response with `## Reasoning` in muted text and `## Answer` in bold; display a `route_taken` badge ("RAG" or "Direct") next to each response; show `LoadingSpinner` while awaiting the API; show `ErrorBanner` on non-2xx responses; generate a UUID `session_id` on component mount
   - _Requirements: 11.1, 11.2, 11.4, 11.5_
 
-- [ ] 12. Frontend Path B — Practice Agent page
+- [x] 12. Frontend Path B — Practice Agent page
   - Write `frontend/src/pages/PracticeAgent.tsx` — implement topic input, difficulty dropdown (easy/medium/hard), and Start Practice button; call `practiceStart` and render the MCQ with four radio-button options; disable Submit until an option is selected; call `practiceAnswer` on submit; render ✓ Correct or ✗ Incorrect feedback; when `explanation` is present, render it in a `bg-yellow-50 border-l-4 border-yellow-400` panel with a 📚 icon to visually distinguish it from standard feedback; show `LoadingSpinner` and `ErrorBanner` appropriately
   - _Requirements: 11.1, 11.3, 11.4, 11.5_
 
-- [ ] 13. Frontend Path C — Doc-to-Concept page
+- [x] 13. Frontend Path C — Doc-to-Concept page
   - Write `frontend/src/pages/DocToConcept.tsx` — implement PDF file input (`accept=".pdf"`), optional topic text input, and Upload & Analyse button; call `uploadDoc` with a `FormData` payload; after upload, poll `getDocConcepts` until the document is ready; render extracted formulas in monospace code blocks with their worked examples in prose below each formula; show `LoadingSpinner` during upload and processing; show `ErrorBanner` on 422 or other errors
   - _Requirements: 11.1, 11.4, 11.5, 11.6_
 
-- [ ] 14. Docker Compose wiring — final verification
+- [x] 14. Docker Compose wiring — final verification
   - Update `docker-compose.yml` to add the `frontend` service (build `./frontend`, port `3000:3000`, `VITE_API_URL=http://backend:8080`) and ensure `backend` depends on `postgres` and `chromadb`
   - Verify the `backend` service passes all required environment variables (`OLLAMA_BASE_URL`, `POSTGRES_DSN`, `CHROMA_HOST`, `CHROMA_PORT`, `LLAMA_PARSE_API_KEY`) from the `.env` file
   - Confirm `ollama` is documented in `README.md` as a host-side prerequisite (not a compose service) with `OLLAMA_BASE_URL=http://host.docker.internal:11434`
-  - Ensure all tests pass, ask the user if questions arise.
+  - Ask the user if questions arise.
   - _Requirements: 2.1, 2.2, 2.3_
 
 ## Notes

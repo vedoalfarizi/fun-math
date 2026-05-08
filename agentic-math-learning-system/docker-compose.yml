@@ -49,6 +49,17 @@ services:
       - chroma_data:/chroma/chroma
     restart: unless-stopped
 
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # Backend API URL — service name resolves inside the compose network
+      - VITE_API_URL=http://backend:8080
+    depends_on:
+      - backend
+    restart: unless-stopped
+
 # Named volumes — Docker manages the lifecycle of these storage areas
 volumes:
   postgres_data:

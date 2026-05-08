@@ -35,12 +35,17 @@ Ollama (host machine, :11434) — NOT a compose service; needs GPU access
 ### Prerequisites
 
 1. **Docker & Docker Compose** — [Install Docker Desktop](https://docs.docker.com/get-docker/)
-2. **Ollama** — running on your host machine with `llama3:latest` pulled:
+2. **Ollama** — running on your host machine with `llama3:latest` pulled (Ollama is **not** a Docker Compose service — it runs directly on the host so it can access the GPU):
    ```bash
    # Install Ollama: https://ollama.com
    ollama pull llama3:latest
    ollama serve          # starts on :11434 by default
    ```
+   In your `.env` file set:
+   ```
+   OLLAMA_BASE_URL=http://host.docker.internal:11434
+   ```
+   This address lets containers reach the host's Ollama process. On Linux, use the host's LAN IP or `172.17.0.1` if `host.docker.internal` is not available.
 3. **LlamaParse API key** — sign up at [cloud.llamaindex.ai](https://cloud.llamaindex.ai) (free tier available)
 
 ### Start the Stack
