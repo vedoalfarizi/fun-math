@@ -41,15 +41,34 @@ class Base(DeclarativeBase):
 # Read the DSN from the environment — never hardcode credentials.
 # POSTGRES_DSN format: postgresql://user:password@host:port/dbname
 # In the Docker Compose network the host is the service name "postgres".
-def _create_engine():
-    dsn = os.environ["POSTGRES_DSN"]
-    # pool_pre_ping=True makes SQLAlchemy test connections before use,
-    # which prevents "server closed the connection unexpectedly" errors
-    # after the Postgres container restarts.
-    return create_engine(dsn, pool_pre_ping=True)
+#
+# NOTE: Engine creation is intentionally deferred to first use via
+# _get_engine() rather than running at import time.  Creating the engine
+# at module load would attempt a DNS lookup for "postgres" immediately,
+# which fails if the module is imported before the compose network is
+# ready (e.g. during testing or early startup).  Lazy initialisation
+# means the connection is only attempted when the app actually needs it.
+_engine = None
+
+def _get_engine():
+    global _engine
+    if _engine is None:
+        dsn = os.environ["POSTGRES_DSN"]
+        # pool_pre_ping=True makes SQLAlchemy test connections before use,
+        # which prevents "server closed the connection unexpectedly" errors
+        # after the Postgres container restarts.
+        _engine = create_engine(dsn, pool_pre_ping=True)
+    return _engine
 
 
-engine = _create_engine()
+# Convenience alias used by create_tables() and SessionLocal below.
+# Accessing `engine` triggers lazy initialisation on first use.
+class _LazyEngine:
+    """Proxy that defers engine creation until first attribute access."""
+    def __getattr__(self, name):
+        return getattr(_get_engine(), name)
+
+engine = _LazyEngine()
 
 # ── Session factory ───────────────────────────────────────────────────
 # SessionLocal is a class; calling SessionLocal() creates a new session.
@@ -57,8 +76,11 @@ engine = _create_engine()
 # makes transaction boundaries visible and educational.
 # autoflush=False prevents SQLAlchemy from issuing unexpected SQL during
 # attribute access, keeping behaviour predictable for students.
+#
+# We pass a callable for bind so the engine is resolved lazily at the
+# time a session is first created, not at import time.
 SessionLocal = sessionmaker(
-    bind=engine,
+    bind=None,       # set lazily in get_session() via _get_engine()
     autocommit=False,
     autoflush=False,
 )
@@ -79,7 +101,8 @@ def get_session() -> Generator[Session, None, None]:
     The session is automatically closed (and rolled back on exception)
     when the `with` block exits, preventing connection leaks.
     """
-    db: Session = SessionLocal()
+    # Bind to the real engine at session-creation time (lazy init).
+    db: Session = SessionLocal(bind=_get_engine())
     try:
         yield db
     except Exception:
@@ -113,5 +136,5 @@ def create_tables() -> None:
     # otherwise no tables are created because no models are registered here.
     from models.db_models import Base as ModelsBase  # noqa: F401
 
-    ModelsBase.metadata.create_all(bind=engine)
+    ModelsBase.metadata.create_all(bind=_get_engine())
     logger.info("database tables created (or already exist)")

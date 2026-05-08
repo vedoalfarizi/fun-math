@@ -23,8 +23,13 @@ services:
       # PDF parsing — LlamaParse cloud API key
       - LLAMA_PARSE_API_KEY=${LLAMA_PARSE_API_KEY}
     depends_on:
-      - postgres
-      - chromadb
+      postgres:
+        # Wait until postgres is actually accepting connections, not just started.
+        # depends_on without condition only waits for the container to start,
+        # which is too early — Postgres needs a few seconds to initialise.
+        condition: service_healthy
+      chromadb:
+        condition: service_started
     restart: unless-stopped
 
   postgres:
@@ -38,6 +43,14 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    # Healthcheck lets dependent services (backend) wait until Postgres is
+    # ready to accept connections rather than just running as a process.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     restart: unless-stopped
 
   chromadb:
@@ -55,7 +68,7 @@ services:
       - "3000:3000"
     environment:
       # Backend API URL — service name resolves inside the compose network
-      - VITE_API_URL=http://backend:8080
+      - VITE_API_URL=http://localhost:8080
     depends_on:
       - backend
     restart: unless-stopped

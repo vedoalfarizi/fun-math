@@ -296,14 +296,18 @@ def persist_node(state: TutorState) -> TutorState:
         # SQLAlchemy does not detect in-place mutations to JSON columns by default.
         # Reassigning the attribute (rather than calling .append()) ensures the
         # ORM marks the column as dirty and includes it in the UPDATE statement.
-        record.turns = (record.turns or []) + [turn]
+        new_turns = (record.turns or []) + [turn]
+        record.turns = new_turns
 
         db.commit()
 
+    # Log outside the session block using the local variable — accessing
+    # record.turns here would raise DetachedInstanceError because the
+    # session is already closed after the `with` block exits.
     logger.info(
         "persist_node | session=%s turns_total=%d",
         state["session_id"],
-        len(record.turns),
+        len(new_turns),
     )
 
     # Return state unchanged — this node is a pure side-effect step.

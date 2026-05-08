@@ -314,15 +314,18 @@ def persist_node(state: PracticeState) -> PracticeState:
         # SQLAlchemy does not detect in-place mutations to JSON columns by default.
         # Reassigning the attribute ensures the ORM marks the column as dirty
         # and includes it in the UPDATE statement.
-        record.history = (record.history or []) + [turn]
+        new_history = (record.history or []) + [turn]
+        record.history = new_history
 
         db.commit()
 
+    # Log outside the session using the local variable — accessing record.history
+    # here would raise DetachedInstanceError because the session is already closed.
     logger.info(
         "persist_node | session=%s outcome=%s turns_total=%d",
         state["session_id"],
         state.get("outcome"),
-        len(record.history),
+        len(new_history),
     )
 
     # Set graph_status to "next_question" when the student answered correctly,
