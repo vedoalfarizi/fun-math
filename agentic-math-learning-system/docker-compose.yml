@@ -1,0 +1,55 @@
+# docker-compose.yml
+# ─────────────────────────────────────────────────────────────────────
+# Defines three services: the FastAPI backend, PostgreSQL for session
+# persistence, and ChromaDB for vector storage.
+#
+# Ollama runs on the HOST machine (not in compose) because it needs GPU
+# access. Set OLLAMA_BASE_URL=http://host.docker.internal:11434 in .env
+# ─────────────────────────────────────────────────────────────────────
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      # LLM — Ollama runs on the host, not inside compose
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      # Relational DB — connection string for SQLAlchemy
+      - POSTGRES_DSN=${POSTGRES_DSN}
+      # Vector DB — service name resolves inside the compose network
+      - CHROMA_HOST=${CHROMA_HOST}
+      - CHROMA_PORT=${CHROMA_PORT}
+      # PDF parsing — LlamaParse cloud API key
+      - LLAMA_PARSE_API_KEY=${LLAMA_PARSE_API_KEY}
+    depends_on:
+      - postgres
+      - chromadb
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    volumes:
+      # Named volume so data survives container restarts
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      # Named volume so embeddings survive container restarts
+      - chroma_data:/chroma/chroma
+    restart: unless-stopped
+
+# Named volumes — Docker manages the lifecycle of these storage areas
+volumes:
+  postgres_data:
+  chroma_data:

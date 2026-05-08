@@ -1,0 +1,34 @@
+# requirements.txt
+# ─────────────────────────────────────────────────────────────────────
+# All backend dependencies with pinned minor versions.
+# Using ~= (compatible release) pins the minor version while allowing
+# patch updates, which is a safe default for demo projects.
+# ─────────────────────────────────────────────────────────────────────
+
+# ── Web framework ─────────────────────────────────────────────────────
+fastapi~=0.136.0          # ASGI web framework; provides routing, validation, OpenAPI docs
+uvicorn[standard]~=0.34.0 # ASGI server; [standard] adds websockets + uvloop for performance
+
+# ── LangChain / LangGraph ─────────────────────────────────────────────
+langchain-core~=1.3.0     # Core abstractions: Runnable, BaseMessage, tool decorators
+langchain-ollama~=1.1.0   # OllamaLLM integration — used in llm_wrapper.py
+langgraph~=1.0.0          # State-machine orchestration for all three agentic paths
+
+# ── Vector store ──────────────────────────────────────────────────────
+chromadb~=1.0.0           # ChromaDB client; connects to the chromadb Docker service
+
+# ── Embeddings & reranking ────────────────────────────────────────────
+sentence-transformers~=4.1.0  # SentenceTransformer (embeddings) + CrossEncoder (reranker)
+
+# ── Relational database ───────────────────────────────────────────────
+sqlalchemy~=2.0.0         # ORM + connection pooling; used in database.py and db_models.py
+psycopg2-binary~=2.9.0    # PostgreSQL driver for SQLAlchemy (binary wheel, no libpq needed)
+
+# ── Data validation ───────────────────────────────────────────────────
+pydantic~=2.11.0          # Request/response models in api_models.py; FastAPI depends on this
+
+# ── PDF parsing ───────────────────────────────────────────────────────
+llama-parse~=0.6.0        # LlamaParse client for PDF-to-Markdown extraction (Path C)
+
+# ── File upload support ───────────────────────────────────────────────
+python-multipart~=0.0.20  # Required by FastAPI to parse multipart/form-data (PDF uploads)
